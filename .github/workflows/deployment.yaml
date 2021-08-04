@@ -31,12 +31,10 @@ jobs:
           scope: "@moggiez"
 
       - name: Login to NPM
-        run: token=${{ secrets.GITHUB_TOKEN }} make npm-auth
+        run: token=${{ secrets.GH_PAT_NPM }} make npm-auth
 
       - name: Build lambdas dev
         run: make build-dev
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Install NPM modules
         run: npm i
