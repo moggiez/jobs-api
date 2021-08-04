@@ -63,9 +63,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
           aws-region: eu-west-1
 
-      - name: Login to NPM
-        run: token=${{ secrets.GH_PAT_NPM }} make npm-auth
-
       - name: Build lambdas
         run: make build
         env:
