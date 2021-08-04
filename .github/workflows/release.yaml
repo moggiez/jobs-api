@@ -1,4 +1,3 @@
-
 name: "Release"
 
 on:
@@ -51,9 +50,11 @@ jobs:
         run: cd infra && terraform fmt -check
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/setup-node@v2
         with:
-          node-version: "14"
+          node-version: 14
+          registry-url: https://npm.pkg.github.com/
+          scope: "@moggiez"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -63,7 +64,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to NPM
-        run: make npm-auth
+        run: token=${{ secrets.GITHUB_TOKEN }} make npm-auth
 
       - name: Build lambdas
         run: make build
@@ -84,4 +85,3 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_KEY }}
           AWS_DEFAULT_REGION: "eu-west-1"
-
