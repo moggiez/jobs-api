@@ -2,7 +2,7 @@ resource "aws_iam_policy" "dynamodb_access_policy" {
   name = "jobs-api_lambda_access_dynamodb_policy"
   path = "/"
 
-  policy = templatefile("templates/dynamo_access_policy.json", { table = aws_dynamodb_table.job_results.name })
+  policy = templatefile("templates/dynamo_access_policy.json", { table = aws_dynamodb_table.jobs.name })
 }
 
 module "api_lambda" {

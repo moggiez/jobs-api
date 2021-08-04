@@ -28,7 +28,7 @@ exports.handler = function (event, context, callback) {
   debug(event, response);
 
   const table = new db.Table({
-    config: db.tableConfigs.job_results,
+    config: db.tableConfigs.jobs,
     AWS: AWS,
   });
   const handler = new Handler(table);
