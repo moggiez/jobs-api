@@ -77,9 +77,6 @@ jobs:
         with:
           node-version: "14"
 
-      - name: Login to NPM
-        run: make npm-auth
-
       - name: Build lambda
         run: make build
         env:
