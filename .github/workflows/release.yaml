@@ -64,10 +64,12 @@ jobs:
           aws-region: eu-west-1
 
       - name: Login to NPM
-        run: token=${{ secrets.GITHUB_TOKEN }} make npm-auth
+        run: token=${{ secrets.GH_PAT_NPM }} make npm-auth
 
       - name: Build lambdas
         run: make build
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GH_PAT_NPM}}
 
       # Builds lambda packages and generates an execution plan for Terraform
       - name: Preview deployment

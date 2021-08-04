@@ -16,8 +16,5 @@ resource "aws_dynamodb_table" "jobs" {
     type = "S"
   }
 
-  attribute {
-    name = "TaskType"
-    type = "S"
-  }
+  // PreviousTaskId, TaskType, State, Result
 }

@@ -5,7 +5,7 @@ module "organisationId_param" {
   http_methods       = local.http_methods
   resource_path_part = "{organisationId}"
 
-  authorizer         = local.authorizer
+  authorizer = local.authorizer
 
 }
 
@@ -23,7 +23,7 @@ module "jobs_part" {
   http_methods       = local.http_methods
   resource_path_part = "jobs"
 
-  authorizer         = local.authorizer
+  authorizer = local.authorizer
 
 }
 
@@ -41,7 +41,7 @@ module "jobId_param" {
   http_methods       = local.http_methods
   resource_path_part = "{jobId}"
 
-  authorizer         = local.authorizer
+  authorizer = local.authorizer
 
 }
 
