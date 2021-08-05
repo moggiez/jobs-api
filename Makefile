@@ -39,7 +39,7 @@ format:
 test:
 	npm run test
 
-update-lambda-fn:
+update-lambda-fn: build
 	aws lambda update-function-code --function-name jobs-api --zip-file fileb://$(shell pwd)/dist/jobs-api.zip --publish | jq .FunctionArn
 
 # NPM COMMANDS

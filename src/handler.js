@@ -31,11 +31,38 @@ class Handler {
   };
 
   get = async (request, response) => {
-    throw new Error("Not Implemented!");
+    try {
+      const data = await this.table.query({
+        hashKey: request.pathParameters.organisationId,
+        sortKey: request.pathParameters.jobId,
+      });
+      const responseBody =
+        "Items" in data
+          ? {
+              data: data.Items,
+            }
+          : data.Item;
+      response(200, responseBody);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error.");
+    }
   };
 
   post = async (request, response) => {
-    throw new Error("Not Implemented!");
+    try {
+      const jobId = uuid.v4();
+      const data = await this.table.create({
+        hashKey: request.pathParameters.organisationId,
+        sortKey: jobId,
+        record: request.body,
+      });
+      data["JobId"] = jobId;
+      response(200, data);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error.");
+    }
   };
 
   put = async (request, response) => {
