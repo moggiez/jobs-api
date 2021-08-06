@@ -15,13 +15,29 @@ class Handler {
   handle = async (req, res) => {
     try {
       if (req.httpMethod == "GET") {
-        this.get(req, res);
+        if (req.resource.includes("/tasks")) {
+          this.getTasks(req, res);
+        } else {
+          this.get(req, res);
+        }
       } else if (req.httpMethod == "POST") {
-        this.post(req, res);
+        if (req.resource.includes("/tasks")) {
+          this.postTask(req, res);
+        } else {
+          this.post(req, res);
+        }
       } else if (req.httpMethod == "PUT") {
-        this.put(req, res);
+        if (req.resource.includes("/tasks")) {
+          this.putTask(req, res);
+        } else {
+          this.put(req, res);
+        }
       } else if (req.httpMethod == "DELETE") {
-        this.delete(req, res);
+        if (req.resource.includes("/tasks")) {
+          this.deleteTask(req, res);
+        } else {
+          this.delete(req, res);
+        }
       } else {
         res(500, "Not supported.");
       }
@@ -35,6 +51,38 @@ class Handler {
       hashKey: organisationId,
       sortKey: jobId,
       indexName: "OrganisationJobs",
+      filter: {
+        expression: "TaskId = :taskId",
+        attributes: {
+          taskId: "Metadata",
+        },
+      },
+    });
+  };
+
+  _tryGetJob = async (organisationId, jobId, response) => {
+    const data = await this._queryJobs(organisationId, jobId);
+    const job =
+      "Item" in data ? data.Item : data.Items.length > 0 ? data.Items[0] : null;
+
+    if (job === null) {
+      response(404, "Not found.");
+    }
+
+    return job;
+  };
+
+  _queryTasks = async (organisationId, jobId) => {
+    return await this.table.query({
+      hashKey: organisationId,
+      sortKey: jobId,
+      indexName: "OrganisationJobs",
+      filter: {
+        expression: "TaskId <> :taskId",
+        attributes: {
+          taskId: "Metadata",
+        },
+      },
     });
   };
 
@@ -57,42 +105,75 @@ class Handler {
     }
   };
 
-  post = async (request, response) => {
+  getTasks = async (request, response) => {
     try {
-      const record = { ...request.body };
-      record.OrganisationId = request.pathParameters.organisationId;
-      const jobId = uuid.v4();
-      const taskId = uuid.v4();
-      const data = await this.table.create({
-        hashKey: jobId,
-        sortKey: taskId,
-        record: record,
-      });
-      data["JobId"] = jobId;
-      data["TaskId"] = taskId;
-      response(200, data);
+      const data = await this._queryTasks(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId
+      );
+      const responseBody =
+        "Items" in data
+          ? {
+              data: data.Items,
+            }
+          : data.Item;
+      response(200, responseBody);
     } catch (err) {
       console.log("Error: ", err);
       response(500, "Internal server error.");
     }
   };
 
+  post = async (request, response) => {
+    try {
+      const record = { ...request.body };
+      record.OrganisationId = request.pathParameters.organisationId;
+      const jobId = uuid.v4();
+      const data = await this.table.create({
+        hashKey: jobId,
+        sortKey: "Metadata",
+        record: record,
+      });
+      data["JobId"] = jobId;
+      response(201, data);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error." + err);
+    }
+  };
+
+  postTask = async (request, response) => {
+    try {
+      const job = await this._tryGetJob(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId,
+        response
+      );
+
+      const record = { ...request.body };
+      record.OrganisationId = request.pathParameters.organisationId;
+      const taskId = uuid.v4();
+      const data = await this.table.create({
+        hashKey: job.JobId,
+        sortKey: taskId,
+        record: record,
+      });
+      data["JobId"] = job.JobId;
+      data["TaskId"] = taskId;
+      response(201, data);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error." + err);
+    }
+  };
+
   put = async (request, response) => {
     try {
-      const data = await this._queryJobs(
+      const job = await this._tryGetJob(
         request.pathParameters.organisationId,
-        request.pathParameters.jobId
+        request.pathParameters.jobId,
+        response
       );
-      const job =
-        "Item" in data
-          ? data.Item
-          : data.Items.length > 0
-          ? data.Items[0]
-          : null;
-
-      if (job === null) {
-        response(404, "Not found.");
-      }
 
       const updateData = await this.table.update({
         hashKey: job.JobId,
@@ -106,26 +187,56 @@ class Handler {
     }
   };
 
+  putTask = async (request, response) => {
+    try {
+      const job = await this._tryGetJob(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId,
+        response
+      );
+
+      const updateData = await this.table.update({
+        hashKey: job.JobId,
+        sortKey: request.pathParameters.taskId,
+        updatedFields: request.body,
+      });
+      response(200, updateData);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error." + err);
+    }
+  };
+
   delete = async (request, response) => {
     try {
-      const data = await this._queryJobs(
+      const job = await this._tryGetJob(
         request.pathParameters.organisationId,
-        request.pathParameters.jobId
+        request.pathParameters.jobId,
+        response
       );
-      const job =
-        "Item" in data
-          ? data.Item
-          : data.Items.length > 0
-          ? data.Items[0]
-          : null;
-
-      if (job === null) {
-        response(404, "Not found.");
-      }
 
       const deleteData = await this.table.delete({
         hashKey: job.JobId,
         sortKey: job.TaskId,
+      });
+      response(200, deleteData);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error.");
+    }
+  };
+
+  deleteTask = async (request, response) => {
+    try {
+      const job = await this._tryGetJob(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId,
+        response
+      );
+
+      const deleteData = await this.table.delete({
+        hashKey: job.JobId,
+        sortKey: request.pathParameters.taskId,
       });
       response(200, deleteData);
     } catch (err) {

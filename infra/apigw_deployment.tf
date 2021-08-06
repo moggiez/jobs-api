@@ -5,7 +5,9 @@ resource "aws_api_gateway_deployment" "api_deployment" {
   depends_on = [
     module.organisationId_param,
     module.jobs_part,
-    module.jobId_param
+    module.jobId_param,
+    module.tasks_part,
+    module.taskId_param
   ]
 
   rest_api_id = aws_api_gateway_rest_api._.id
