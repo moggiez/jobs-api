@@ -34,3 +34,4 @@ node_modules/
 coverage/
 report.json
 .npmrc
+infra/.terraform.lock.hcl

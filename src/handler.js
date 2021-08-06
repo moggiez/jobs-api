@@ -30,12 +30,20 @@ class Handler {
     }
   };
 
+  _queryJobs = async (organisationId, jobId) => {
+    return await this.table.query({
+      hashKey: organisationId,
+      sortKey: jobId,
+      indexName: "OrganisationJobs",
+    });
+  };
+
   get = async (request, response) => {
     try {
-      const data = await this.table.query({
-        hashKey: request.pathParameters.organisationId,
-        sortKey: request.pathParameters.jobId,
-      });
+      const data = await this._queryJobs(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId
+      );
       const responseBody =
         "Items" in data
           ? {
@@ -51,13 +59,17 @@ class Handler {
 
   post = async (request, response) => {
     try {
+      const record = { ...request.body };
+      record.OrganisationId = request.pathParameters.organisationId;
       const jobId = uuid.v4();
+      const taskId = uuid.v4();
       const data = await this.table.create({
-        hashKey: request.pathParameters.organisationId,
-        sortKey: jobId,
-        record: request.body,
+        hashKey: jobId,
+        sortKey: taskId,
+        record: record,
       });
       data["JobId"] = jobId;
+      data["TaskId"] = taskId;
       response(200, data);
     } catch (err) {
       console.log("Error: ", err);
@@ -66,11 +78,60 @@ class Handler {
   };
 
   put = async (request, response) => {
-    throw new Error("Not Implemented!");
+    try {
+      const data = await this._queryJobs(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId
+      );
+      const job =
+        "Item" in data
+          ? data.Item
+          : data.Items.length > 0
+          ? data.Items[0]
+          : null;
+
+      if (job === null) {
+        response(404, "Not found.");
+      }
+
+      const updateData = await this.table.update({
+        hashKey: job.JobId,
+        sortKey: job.TaskId,
+        updatedFields: request.body,
+      });
+      response(200, updateData);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error." + err);
+    }
   };
 
   delete = async (request, response) => {
-    throw new Error("Not Implemented!");
+    try {
+      const data = await this._queryJobs(
+        request.pathParameters.organisationId,
+        request.pathParameters.jobId
+      );
+      const job =
+        "Item" in data
+          ? data.Item
+          : data.Items.length > 0
+          ? data.Items[0]
+          : null;
+
+      if (job === null) {
+        response(404, "Not found.");
+      }
+
+      const deleteData = await this.table.delete({
+        hashKey: job.JobId,
+        sortKey: job.TaskId,
+      });
+      response(200, deleteData);
+    } catch (err) {
+      console.log("Error: ", err);
+      response(500, "Internal server error.");
+    }
   };
 }
 

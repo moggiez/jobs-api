@@ -41,9 +41,9 @@ exports.handler = function (event, context, callback) {
       hashKey: "JobId",
       sortKey: "TaskId",
       indexes: {
-        JobTasksState: {
-          hashKey: "JobId",
-          sortKey: "State",
+        OrganisationJobs: {
+          hashKey: "OrganisationId",
+          sortKey: "JobId",
         },
       },
     },

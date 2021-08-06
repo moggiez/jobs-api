@@ -11,10 +11,10 @@ infra-init:
 infra-debug:
 	cd infra && TF_LOG=DEBUG terraform apply -auto-approve infra
 
-infra-deploy: modules-cleanup
+infra-deploy: modules-cleanup infra-init
 	cd infra && terraform init && terraform apply -auto-approve
 
-infra-preview: modules-cleanup
+infra-preview: modules-cleanup infra-init
 	cd infra && terraform init && terraform plan
 
 infra-destroy:
