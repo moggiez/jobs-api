@@ -26,7 +26,7 @@ class InternalHandler {
   updateJobState = async ({ jobId, newState }) => {};
 
   batchCreate = async ({ records }) => {
-    await this.createAll({ records });
+    await this.table.createAll({ records });
   };
 
   createJob = async ({ jobId, data }) => {
@@ -36,33 +36,6 @@ class InternalHandler {
       record: data,
     });
     return resultData;
-  };
-
-  createAll = async ({ records }) => {
-    const self = this.table;
-    const params = {
-      RequestItems: {},
-    };
-    params.RequestItems[self.config.tableName] = [];
-
-    records.map((val) => {
-      const putRequest = {
-        PutRequest: {
-          Item: val,
-        },
-      };
-      params.RequestItems[self.config.tableName].push(putRequest);
-    });
-
-    return new Promise((resolve, reject) => {
-      self.docClient.batchWrite(params, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
   };
 }
 
