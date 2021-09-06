@@ -6,5 +6,5 @@ then
 else
     gh_token=${token}
 fi
-echo "@moggiez:registry=https://npm.pkg.github.com/" > .npmrc
-echo "//npm.pkg.github.com/:_authToken=${gh_token}" >> .npmrc
+echo "@moggiez:registry=https://npm.pkg.github.com/" > ./src/.npmrc
+echo "//npm.pkg.github.com/:_authToken=${gh_token}" >> ./src/.npmrc
