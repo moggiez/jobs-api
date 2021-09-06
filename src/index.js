@@ -6,8 +6,20 @@ const helpers = require("@moggiez/moggies-lambda-helpers");
 const auth = require("@moggiez/moggies-auth");
 
 const { Handler } = require("./handler");
+const { InternalHandler } = require("./internalHandler");
 
 const DEBUG = false;
+const TABLE_CONFIG = {
+  tableName: "jobs",
+  hashKey: "JobId",
+  sortKey: "TaskId",
+  indexes: {
+    OrganisationJobs: {
+      hashKey: "OrganisationId",
+      sortKey: "JobId",
+    },
+  },
+};
 
 const debug = (event, response) => {
   const body = {
@@ -27,29 +39,27 @@ const getRequest = (event) => {
   return request;
 };
 
-exports.handler = function (event, context, callback) {
-  const response = helpers.getResponseFn(callback);
-  try {
-    debug(event, response);
-  } catch (err) {
-    response(500, err);
-  }
-
+exports.handler = async function (event, context, callback) {
   const table = new db.Table({
-    config: {
-      tableName: "jobs",
-      hashKey: "JobId",
-      sortKey: "TaskId",
-      indexes: {
-        OrganisationJobs: {
-          hashKey: "OrganisationId",
-          sortKey: "JobId",
-        },
-      },
-    },
+    config: TABLE_CONFIG,
     AWS: AWS,
   });
-  const handler = new Handler(table);
+  if ("isInternal" in event && event.isInternal) {
+    if (DEBUG) {
+      return event;
+    }
 
-  handler.handle(getRequest(event), response);
+    const internalHandler = new InternalHandler({ table });
+    return await internalHandler.handle(event);
+  } else {
+    const response = helpers.getResponseFn(callback);
+    try {
+      debug(event, response);
+    } catch (err) {
+      response(500, err);
+    }
+    const handler = new Handler(table);
+
+    await handler.handle(getRequest(event), response);
+  }
 };

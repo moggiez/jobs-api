@@ -16,27 +16,27 @@ class Handler {
     try {
       if (req.httpMethod == "GET") {
         if (req.resource.includes("/tasks")) {
-          this.getTasks(req, res);
+          await this.getTasks(req, res);
         } else {
-          this.get(req, res);
+          await this.get(req, res);
         }
       } else if (req.httpMethod == "POST") {
         if (req.resource.includes("/tasks")) {
-          this.postTask(req, res);
+          await this.postTask(req, res);
         } else {
-          this.post(req, res);
+          await this.post(req, res);
         }
       } else if (req.httpMethod == "PUT") {
         if (req.resource.includes("/tasks")) {
-          this.putTask(req, res);
+          await this.putTask(req, res);
         } else {
-          this.put(req, res);
+          await this.put(req, res);
         }
       } else if (req.httpMethod == "DELETE") {
         if (req.resource.includes("/tasks")) {
-          this.deleteTask(req, res);
+          await this.deleteTask(req, res);
         } else {
-          this.delete(req, res);
+          await this.delete(req, res);
         }
       } else {
         res(500, "Not supported.");
